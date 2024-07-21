@@ -1,8 +1,10 @@
 import requests
 import os
 
+default_first_msg = "Hello Sam. This is your Shoulder Angel."
 
-def call_user():
+
+def call_user(first_msg=default_first_msg):
     """Trigger a call thru Vapi to a user, with context"""
     # Your Vapi API Authorization token
     auth_token = os.environ["VAPI_AUTH_TOKEN"]
@@ -20,11 +22,18 @@ def call_user():
     # Create the data payload for the API request
     data = {
         "assistant": {
-            "firstMessage": "Hey, what's up?",
+            "firstMessage": first_msg,
             "model": {
                 "provider": "groq",
                 "model": llm_model,
-                "messages": [{"role": "system", "content": "You are an assistant."}],
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": """Your name is Angel, short for Shoulder Angel. You are a voice agent on a phone call. Your goal is to help a user clarify their goals for the day, and to ensure they're pursuing them.
+
+Start by asking what a user's goals for the day are.""",
+                    }
+                ],
             },
             "voice": "jennifer-playht",
         },
