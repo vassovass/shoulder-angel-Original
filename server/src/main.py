@@ -75,15 +75,24 @@ def read_root():
     return {"Hello": "World"}
 
 
+from pydantic import BaseModel
+
+
+class ActivityData(BaseModel):
+    data: list
+
+
 @app.post("/handle_activity")
 @weave.op()
-def handle_activity(data):
+def handle_activity(data: ActivityData):
     """Take in OCR info, decide if it's relevant to current goals"""
 
-    print(data)
+    # print(data)
 
-    ocr_str = data["data"][0]["content"]["text"]
+    ocr_str = data.data[0]["content"]["text"]
 
     user_goals = "I want to be super productive and looking at coding things. I don't want to look at social sites, youtube, things like that."
+
+    print(ocr_str)
 
     return None
