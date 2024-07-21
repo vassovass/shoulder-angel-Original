@@ -8,7 +8,7 @@ class GroqScheduler(weave.Model):
     system_message: str
 
     @weave.op()
-    async def predict(self, user_sched: str, now_ts: str):
+    def predict(self, user_sched: str, now_ts: str):
         client = Groq()
 
         messages = [

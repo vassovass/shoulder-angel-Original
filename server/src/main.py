@@ -2,7 +2,7 @@ import datetime
 import requests
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.schedulers.background import BackgroundScheduler
 import weave
 from dotenv import load_dotenv
 
@@ -25,7 +25,7 @@ def printit():
 
 
 @weave.op()
-async def check_schedule():
+def check_schedule():
     "Check if the user is active, also check their schedule. If scheduled but not active, place call"
 
     # fetch setting for work schedule (string initially)
@@ -42,7 +42,7 @@ async def check_schedule():
     llm_user_last_active = llmnow
 
     # have LLM check if it's within schedule or not
-    res = await scheduler.predict(user_sched_str, llmnow)
+    res = scheduler.predict(user_sched_str, llmnow)
 
     print(res)
 
@@ -56,7 +56,7 @@ async def check_schedule():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    scheduler = AsyncIOScheduler()
+    scheduler = BackgroundScheduler()
     scheduler.add_job(check_schedule, "interval", seconds=60)
     scheduler.start()
     yield
