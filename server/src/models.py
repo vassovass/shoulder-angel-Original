@@ -1,9 +1,6 @@
 from datetime import datetime
 import weave
 from groq import Groq
-from dotenv import load_dotenv
-
-load_dotenv()
 
 
 class GroqScheduler(weave.Model):
@@ -11,7 +8,7 @@ class GroqScheduler(weave.Model):
     system_message: str
 
     @weave.op()
-    def predict(self, user_sched: str, now_ts: str):
+    async def predict(self, user_sched: str, now_ts: str):
         client = Groq()
 
         messages = [
@@ -20,7 +17,7 @@ class GroqScheduler(weave.Model):
                 "content": self.system_message,
             },
             {"role": "user", "content": f"My preferred schedule is {user_sched}"},
-            {"role": "system", "content": f"Current time is {now_ts}"},  # FIX THIS
+            {"role": "system", "content": f"Current time is {now_ts}"},
             {
                 "role": "system",
                 "content": (
@@ -36,13 +33,15 @@ class GroqScheduler(weave.Model):
             temperature=1,
             max_tokens=1024,
             top_p=1,
-            stream=True,
+            stream=False,
             stop=None,
         )
 
-        for chunk in completion:
-            print(chunk.choices[0].delta.content or "", end="")
+        result = completion
 
-        return None
+        return result.choices[0].message.content
 
-        return None
+        # for chunk in completion:
+        #     print(chunk.choices[0].delta.content or "", end="")
+
+        # return completion.choices[0].message.content
