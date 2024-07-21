@@ -73,3 +73,17 @@ app = FastAPI(lifespan=lifespan)
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
+
+
+@app.post("/handle_activity")
+@weave.op()
+def handle_activity(data):
+    """Take in OCR info, decide if it's relevant to current goals"""
+
+    print(data)
+
+    ocr_str = data["data"][0]["content"]["text"]
+
+    user_goals = "I want to be super productive and looking at coding things. I don't want to look at social sites, youtube, things like that."
+
+    return None
