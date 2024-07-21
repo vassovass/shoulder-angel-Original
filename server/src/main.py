@@ -1,16 +1,18 @@
 import datetime
 import requests
 from contextlib import asynccontextmanager
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from apscheduler.schedulers.background import BackgroundScheduler
 import weave
-from dotenv import load_dotenv
+
 
 load_dotenv()
 
 # local
 from src.models import GroqScheduler, GroqOnTaskAnalyzer, GroqTaskReminderFirstMsg
 from src.voice import call_user
+from src.memory import router as mem_router, get_user_goals
 
 weave.init("shoulder-angel")
 
@@ -65,6 +67,7 @@ def check_schedule():
     )
     # if inactive and also outside of schedule, trigger call
     if currently_within_schedule and not working_recently:
+        user_goal_m = get_user_goals(user_goal_m)
         call_user(
             first_msg=f"Hey Sam, checking in. It's been {minutes_since_last_seen} minutes since you were last active, but you'd intended to be productive right now. Are you still working?"
         )
@@ -81,6 +84,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+
+app.include_router(mem_router)
 
 
 # @app.get("/")
@@ -114,7 +119,9 @@ def handle_activity(data: ActivityData):
 
     user_goals = "I'm Sam. I want to be super productive and looking at coding things. I don't want to look at social sites, youtube, things like that."
 
-    is_on_task = on_task_analyzer.predict(user_goals, ocr_str) == "True"
+    user_goal_m = get_user_goals()
+
+    is_on_task = on_task_analyzer.predict(user_goal_m, ocr_str) == "True"
 
     print(f"User is on task: {is_on_task}")
 

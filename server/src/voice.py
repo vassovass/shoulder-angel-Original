@@ -4,7 +4,9 @@ import os
 default_first_msg = "Hello Sam. This is your Shoulder Angel."
 
 
-def call_user(first_msg=default_first_msg):
+def call_user(
+    first_msg=default_first_msg, user_goal_m="No goals found, you should ask about them"
+):
     """Trigger a call thru Vapi to a user, with context"""
     # Your Vapi API Authorization token
     auth_token = os.environ["VAPI_AUTH_TOKEN"]
@@ -32,7 +34,15 @@ def call_user(first_msg=default_first_msg):
                         "content": """Your name is Angel, short for Shoulder Angel. You are a voice agent on a phone call. Your goal is to help a user clarify their goals for the day, and to ensure they're pursuing them.
 
 Start by asking what a user's goals for the day are.""",
-                    }
+                    },
+                    {
+                        "role": "system",
+                        "content": f"Here are memories of the user's goals: {user_goal_m}",
+                    },
+                ],
+                "toolIds": [
+                    "84d7620b-83ef-4e75-a42f-9f22c3a407a7",  # add_new_memory
+                    "e7f0b7c1-fb3a-43f1-a4e1-dca78e3d0675",  # fetch_memories
                 ],
             },
             "voice": "jennifer-playht",
