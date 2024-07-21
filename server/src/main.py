@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # local
-from src.models import GroqScheduler, GroqOnTaskAnalyzer
+from src.models import GroqScheduler, GroqOnTaskAnalyzer, GroqTaskReminderFirstMsg
 from src.voice import call_user
 
 weave.init("shoulder-angel")
@@ -21,7 +21,12 @@ scheduler = GroqScheduler(
 
 on_task_analyzer = GroqOnTaskAnalyzer(
     model="llama3-70b-8192",
-    system_message="Your role is to analyze the user's OCR output and determine if it's relevant to their stated goals. Return the single word 'True' if it is otherwise draft a message asking the user about their current activities.",
+    system_message="Your role is to analyze the user's OCR output and determine if it's relevant to their stated goals. Return the single word 'True' if it is otherwise return 'False', with nothing else.",
+)
+
+activity_checkin_msg_generator = GroqTaskReminderFirstMsg(
+    model="llama3-70b-8192",
+    system_message="You're having a voice conversation with Sam. Their recent activity seems unaligned with their goals. You should ask about their current activities, and how it relates to their goals. Keep it within two sentences. Reply directly to Sam.",
 )
 
 
@@ -70,7 +75,7 @@ def check_schedule():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     scheduler = BackgroundScheduler()
-    scheduler.add_job(check_schedule, "interval", seconds=60)
+    scheduler.add_job(check_schedule, "interval", seconds=360)
     scheduler.start()
     yield
 
@@ -107,15 +112,17 @@ def handle_activity(data: ActivityData):
 
     ocr_str = data.data[0]["content"]["text"]
 
-    user_goals = "I want to be super productive and looking at coding things. I don't want to look at social sites, youtube, things like that."
+    user_goals = "I'm Sam. I want to be super productive and looking at coding things. I don't want to look at social sites, youtube, things like that."
 
-    is_on_task = on_task_analyzer.predict(user_goals, ocr_str)
+    is_on_task = on_task_analyzer.predict(user_goals, ocr_str) == "True"
 
-    print(f"User is on task: {is_on_task == 'True'}")
+    print(f"User is on task: {is_on_task}")
 
     # Draft first message with LLM
 
-    if is_on_task != "True":
-        call_user(first_msg=is_on_task)
+    if not is_on_task:
+        first_msg = activity_checkin_msg_generator.predict(user_goals, ocr_str)
+
+        call_user(first_msg=first_msg)
 
     return None

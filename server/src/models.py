@@ -67,10 +67,8 @@ class GroqOnTaskAnalyzer(weave.Model):
             {
                 "role": "system",
                 "content": (
-                    "Return a single word 'True' if the text on the screen seems to line up"
-                    " with the user's stated goals. If it doesn't, draft a greeting message "
-                    "to the user, reminding them of their goal, and asking about their current"
-                    " activity. Keep it within two sentences"
+                    "Return a single word `True` or `False`. Return 'True' if the text on the screen seems to line up"
+                    " with the user's stated goals. If it doesn't, return 'False' with nothing else."
                 ),
             },
         ]
@@ -110,9 +108,12 @@ class GroqTaskReminderFirstMsg(weave.Model):
             {
                 "role": "system",
                 "content": (
-                    "Return a single word `True` or `False`. Say 'True' if the text on the screen seems to line up"
-                    " with the user's stated goals. Say 'False' if it doesn't."
+                    "Greet the user and ask them about their current activity, especially how it relates to their stated goals. Keep it within two sentences."
                 ),
+            },
+            {
+                "role": "system",
+                "content": "<phone call to Sam connected>",
             },
         ]
 
