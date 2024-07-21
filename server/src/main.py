@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # local
-from src.models import GroqScheduler
+from src.models import GroqScheduler, GroqOnTaskAnalyzer
 from src.voice import call_user
 
 weave.init("shoulder-angel")
@@ -19,9 +19,14 @@ scheduler = GroqScheduler(
     system_message="Your role is to check whether the user is working when they should be. Compare their stated schedule with the current time.",
 )
 
+on_task_analyzer = GroqOnTaskAnalyzer(
+    model="llama3-70b-8192",
+    system_message="Your role is to analyze the user's OCR output and determine if it's relevant to their stated goals. Return the single word 'True' if it is otherwise draft a message asking the user about their current activities.",
+)
 
-def printit():
-    print(datetime.datetime.now())
+
+# Shitty temporary state
+last_seen = datetime.datetime.now().replace(hour=5)
 
 
 @weave.op()
@@ -38,20 +43,28 @@ def check_schedule():
     llmnow = now.strftime("%A %B %d at %I%p PST")
 
     # check backend to see if user has been active (program sending pings)
-    user_last_active = now
-    llm_user_last_active = llmnow
+    user_last_active = last_seen
+    # llm_user_last_active = user_last_active.strftime("%A %B %d at %I%p PST")
 
-    # have LLM check if it's within schedule or not
-    res = scheduler.predict(user_sched_str, llmnow)
+    # have LLM check if it's currently scheduled time or not
+    currently_within_schedule = scheduler.predict(user_sched_str, llmnow) == "True"
 
-    print(res)
+    # have LLM check if the last seen timestamp is within the last 30 minutes
+    minutes_since_last_seen = int((now - user_last_active).seconds / 60)
 
-    print(res == "True")
+    # working_recently = scheduler.evaluate_last_seen_ts(llm_user_last_active, llmnow)
+    working_recently = minutes_since_last_seen < 30
+
+    print(
+        f"Currently within schedule: {currently_within_schedule}. User working recently: {working_recently}"
+    )
     # if inactive and also outside of schedule, trigger call
-    if res == "True":
-        call_user()
+    if currently_within_schedule and not working_recently:
+        call_user(
+            first_msg=f"Hey Sam, checking in. It's been {minutes_since_last_seen} minutes since you were last active, but you'd intended to be productive right now. Are you still working?"
+        )
 
-    return res
+    return None
 
 
 @asynccontextmanager
@@ -89,10 +102,20 @@ def handle_activity(data: ActivityData):
 
     # print(data)
 
+    global last_seen
+    last_seen = datetime.datetime.now()
+
     ocr_str = data.data[0]["content"]["text"]
 
     user_goals = "I want to be super productive and looking at coding things. I don't want to look at social sites, youtube, things like that."
 
-    print(ocr_str)
+    is_on_task = on_task_analyzer.predict(user_goals, ocr_str)
+
+    print(f"User is on task: {is_on_task == 'True'}")
+
+    # Draft first message with LLM
+
+    if is_on_task != "True":
+        call_user(first_msg=is_on_task)
 
     return None
