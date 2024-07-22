@@ -128,7 +128,7 @@ def handle_activity(data: ActivityData):
     # Draft first message with LLM
 
     if not is_on_task:
-        first_msg = activity_checkin_msg_generator.predict(user_goals, ocr_str)
+        first_msg = activity_checkin_msg_generator.predict(user_goal_m, ocr_str)
 
         call_user(first_msg=first_msg)
 
