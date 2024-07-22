@@ -10,17 +10,21 @@ backend_url = "http://localhost:8000"
 
 def get_screenpipe_activity():
     """Get latest OCR info from screenpipe"""
-    # query most recent OCR from screenpipe
-
-    res = requests.get(f"{sp_url}/search?limit=1&offset=0&content_type=ocr").json()
-
-    try:
-        res_json = res
-        return res_json
-    except Exception as e:
-        print(e)
-        return None
-
+    print("getting screenpipe data")
+    while True:
+        try:
+            response = requests.get(
+                f"{sp_url}/search?limit=1&offset=0&content_type=ocr", timeout=(5, 10)
+            )
+            response.raise_for_status()
+            print("screenpipe data fetched")
+            return response.json()
+        except requests.exceptions.Timeout:
+            print("Request timed out. Retrying...")
+            continue
+        except requests.exceptions.RequestException as e:
+            print(f"Error fetching screenpipe activity: {e}")
+            return None
     # ocr_content_str: str = recent_ocr["data"][0]["content"]["text"]
 
     # print(ocr_content_str)
@@ -33,13 +37,20 @@ def get_screenpipe_activity():
 def main():
     """Run query on an interval"""
 
-    interval = 120  # seconds
+    interval = 20  # seconds
 
     while True:
         res = get_screenpipe_activity()
         # send OCR info to server
-        requests.post(f"{backend_url}/handle_activity", json=res)
+        print(f"posting request with OCR data: {res}")
+        try:
+            requests.post(f"{backend_url}/handle_activity", json=res, timeout=5)
+            print("request posted")
+        except requests.exceptions.Timeout:
+            print("Request timed out. Retrying...")
+            continue
 
+        print(f"snoozing for {interval} seconds")
         time.sleep(interval)
 
     return None
