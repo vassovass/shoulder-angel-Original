@@ -68,7 +68,7 @@ class GroqOnTaskAnalyzer(weave.Model):
                 "role": "system",
                 "content": (
                     "Return a single word `True` or `False`. Return 'True' if the text on the screen seems to line up"
-                    " with the user's stated goals. If it doesn't, return 'False' with nothing else."
+                    " with the user's stated goals. Also return 'True' if there doesn't seem to be any OCR'd text. If it doesn't line up with the user's stated goals, return 'False' with nothing else."
                 ),
             },
         ]
