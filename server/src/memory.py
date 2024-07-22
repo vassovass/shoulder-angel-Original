@@ -47,7 +47,16 @@ class RequestData(BaseModel):
 
 def get_user_goals() -> str:
     # query Mem0 for goals
-    relevant_m = m.search("goals", user_id="samstowers")
+    relevant_m = m.search(
+        "goals, tasks, and intentions for the day", user_id="samstowers", limit=50
+    )
+
+    print(f"relevant_m: {relevant_m}")
+    print(f"type of relevant_m: {type(relevant_m)}")
+
+    goal_m = [x for x in relevant_m if x["metadata"]["category"] == "goals"]
+
+    print(f"goals: {goal_m}")
 
     return str(relevant_m)
 
