@@ -45,4 +45,5 @@ venv.bak/
 *.sqlite3
 *.log
 
-
+# qdrant
+qdrant_storage/
