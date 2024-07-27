@@ -102,20 +102,26 @@ from pydantic import BaseModel
 
 
 class ActivityData(BaseModel):
-    data: list
+    data: list | None = None
+    phone_data: str | None = None
 
 
 @app.post("/handle_activity")
 @weave.op()
-def handle_activity(data: ActivityData):
+def handle_activity(activity: ActivityData):
     """Take in OCR info, decide if it's relevant to current goals"""
-
-    # print(data)
 
     global last_seen
     last_seen = datetime.datetime.now()
 
-    ocr_str = data.data[0]["content"]["text"]
+    ocr_str = ""
+    if activity.data:
+        ocr_str = activity.data[0]["content"]["text"]
+    elif activity.phone_data:
+        ocr_str = activity.phone_data
+
+    if not ocr_str:
+        return None
 
     user_goals = "I'm Sam. I want to be super productive and looking at coding things. I don't want to look at social sites, youtube, things like that."
 
