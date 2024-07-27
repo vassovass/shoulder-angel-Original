@@ -14,7 +14,7 @@ def get_screenpipe_activity():
     while True:
         try:
             response = requests.get(
-                f"{sp_url}/search?limit=1&offset=0&content_type=ocr", timeout=(5, 10)
+                f"{sp_url}/search?limit=1&offset=0&content_type=ocr", timeout=(15, 30)
             )
             response.raise_for_status()
             print("screenpipe data fetched")
@@ -37,14 +37,14 @@ def get_screenpipe_activity():
 def main():
     """Run query on an interval"""
 
-    interval = 20  # seconds
+    interval = 180  # seconds
 
     while True:
         res = get_screenpipe_activity()
         # send OCR info to server
         print(f"posting request with OCR data: {res}")
         try:
-            requests.post(f"{backend_url}/handle_activity", json=res, timeout=5)
+            requests.post(f"{backend_url}/handle_activity", json=res)
             print("request posted")
         except requests.exceptions.Timeout:
             print("Request timed out. Retrying...")
