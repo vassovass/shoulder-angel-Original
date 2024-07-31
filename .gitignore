@@ -47,3 +47,6 @@ venv.bak/
 
 # qdrant
 qdrant_storage/
+
+# pickled convo history
+*.pkl
