@@ -1,6 +1,8 @@
 from datetime import datetime
 import weave
 from groq import Groq
+from typing import List
+from src.types import GroqMessage
 
 
 class GroqScheduler(weave.Model):
@@ -51,7 +53,9 @@ class GroqOnTaskAnalyzer(weave.Model):
     model: str
     system_message: str
 
-    def predict(self, user_goals: str, recent_ocr: str):
+    def predict(
+        self, user_goals: str, recent_ocr: str, recent_messages: List[GroqMessage] = []
+    ):
         client = Groq()
 
         messages = [
@@ -59,11 +63,20 @@ class GroqOnTaskAnalyzer(weave.Model):
                 "role": "system",
                 "content": self.system_message,
             },
-            {"role": "user", "content": f"The user's current goals are: {user_goals}"},
+            # {"role": "user", "content": f"The user's current goals are: {user_goals}"},
+            {
+                "role": "system",
+                "content": f"The following messages are your most recent conversation with the user.",
+            },
+        ]
+        messages.extend(recent_messages)
+        messages.append(
             {
                 "role": "system",
                 "content": f"The user's screen last showed the following OCR'd text: {recent_ocr}",
             },
+        )
+        messages.append(
             {
                 "role": "system",
                 "content": (
@@ -72,7 +85,7 @@ class GroqOnTaskAnalyzer(weave.Model):
                     "Also return 'False' if there doesn't seem to be any OCR'd text. "
                 ),
             },
-        ]
+        )
 
         completion = client.chat.completions.create(
             model=self.model,
@@ -93,7 +106,9 @@ class GroqTaskReminderFirstMsg(weave.Model):
     model: str
     system_message: str
 
-    def predict(self, user_goals: str, recent_ocr: str):
+    def predict(
+        self, user_goals: str, recent_ocr: str, recent_messages: List[GroqMessage] = []
+    ):
         client = Groq()
 
         messages = [
@@ -106,17 +121,16 @@ class GroqTaskReminderFirstMsg(weave.Model):
                 "role": "system",
                 "content": f"The user's screen last showed the following OCR'd text: {recent_ocr}",
             },
+        ]
+        messages.extend(recent_messages)
+        messages.append(
             {
                 "role": "system",
                 "content": (
                     "Greet the user and ask them about their current activity, especially how it relates to their stated goals. Keep it within two sentences."
                 ),
             },
-            {
-                "role": "system",
-                "content": "<phone call to Sam connected>",
-            },
-        ]
+        )
 
         completion = client.chat.completions.create(
             model=self.model,
