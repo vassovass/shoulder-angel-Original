@@ -1,5 +1,4 @@
 import datetime
-import requests
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 from fastapi import FastAPI
@@ -11,8 +10,9 @@ load_dotenv()
 
 # local
 from src.models import GroqScheduler, GroqOnTaskAnalyzer, GroqTaskReminderFirstMsg
-from src.voice import call_user
+from src.voice import call_user, router as voice_router
 from src.memory import router as mem_router, get_user_goals
+from src.state import load_convo, get_convo_history_as_groq
 
 weave.init("shoulder-angel")
 
@@ -23,7 +23,7 @@ scheduler = GroqScheduler(
 
 on_task_analyzer = GroqOnTaskAnalyzer(
     model="llama3-70b-8192",
-    system_message="Your role is to analyze the user's OCR output and determine if it's relevant to their stated goals. Return the single word 'True' if it is otherwise return 'False', with nothing else.",
+    system_message="Your role is to analyze the user's OCR output and determine if it's relevant to their stated goals (infer this from recent conversation). Return the single word 'True' if it is otherwise return 'False', with nothing else. Use recent messages to understand a user's goals, but only use the OCR for current activity.",
 )
 
 activity_checkin_msg_generator = GroqTaskReminderFirstMsg(
@@ -34,6 +34,9 @@ activity_checkin_msg_generator = GroqTaskReminderFirstMsg(
 
 # Shitty temporary state
 last_seen = datetime.datetime.now().replace(hour=5)
+
+# Pull conversation from pickled file (if available)
+load_convo()
 
 
 @weave.op()
@@ -86,6 +89,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 app.include_router(mem_router)
+app.include_router(voice_router)
 
 
 # @app.get("/")
@@ -123,19 +127,26 @@ def handle_activity(activity: ActivityData):
     if not ocr_str:
         return None
 
-    user_goals = "I'm Sam. I want to be super productive and looking at coding things. I don't want to look at social sites, youtube, things like that."
-
     user_goal_m = get_user_goals()
 
-    is_on_task = on_task_analyzer.predict(user_goal_m, ocr_str) == "True"
+    groq_convo_history = get_convo_history_as_groq()
+
+    is_on_task = (
+        on_task_analyzer.predict(
+            user_goal_m, ocr_str, recent_messages=groq_convo_history[-20:]
+        )
+        == "True"
+    )
 
     print(f"User is on task: {is_on_task}")
 
     # Draft first message with LLM
 
     if not is_on_task:
-        first_msg = activity_checkin_msg_generator.predict(user_goal_m, ocr_str)
+        first_msg = activity_checkin_msg_generator.predict(
+            user_goal_m, ocr_str, recent_messages=groq_convo_history[-25:]
+        )
 
-        call_user(first_msg=first_msg)
+        call_user(first_msg=first_msg, recent_ocr=ocr_str)
 
     return None
