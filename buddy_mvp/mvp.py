@@ -36,13 +36,18 @@ def grab_active_window() -> ImageGrab.Image:
 
 
 def pil_to_software_bitmap(img):
-    img = img.convert("RGB")
+    # Windows OCR only supports Gray8 or Bgra8 pixel formats. Convert the
+    # screenshot to 8-bit grayscale to keep the conversion simple and avoid
+    # per-pixel channel shuffling.
+    img = img.convert("L")  # 8-bit pixels, black and white
     width, height = img.size
     pixel_bytes = img.tobytes()
     buffer = Buffer(len(pixel_bytes))
-    buffer.write(pixel_bytes)
+    buffer.length = len(pixel_bytes)
+    with memoryview(buffer) as mv:
+        mv[:] = pixel_bytes
     return SoftwareBitmap.create_copy_from_buffer(
-        buffer, BitmapPixelFormat.Rgb8, width, height
+        buffer, BitmapPixelFormat.GRAY8, width, height
     )
 
 
@@ -50,7 +55,15 @@ def extract_text(img) -> str:
     """Use Windows built in OCR to extract text from a PIL image."""
     engine = OcrEngine.try_create_from_user_profile_languages()
     bitmap = pil_to_software_bitmap(img)
-    result = asyncio.run(engine.recognize_async(bitmap))
+
+    # winrt's recognize_async returns a winrt._IAsyncOperation which is awaitable
+    # but is not a coroutine object. ``asyncio.run`` expects a coroutine, so we
+    # wrap the call in a small coroutine before executing it.
+
+    async def _recognize():
+        return await engine.recognize_async(bitmap)
+
+    result = asyncio.run(_recognize())
     lines = [line.text for line in result.lines]
     return " ".join(lines)
 
