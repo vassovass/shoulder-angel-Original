@@ -86,6 +86,8 @@ try:
         "screen-change": Fore.YELLOW,
         "error": Fore.RED,
         "llm": Fore.CYAN,
+        "summary": Fore.MAGENTA,
+        "hint": Fore.LIGHTGREEN_EX if hasattr(Fore, "LIGHTGREEN_EX") else Fore.GREEN,
     }
     _RESET = Style.RESET_ALL
 except ImportError:  # pragma: no cover – colourama optional
@@ -98,7 +100,7 @@ except ImportError:  # pragma: no cover – colourama optional
     Style = _Dummy()  # type: ignore
 
     _C_ENABLED = False
-    _CLR = {k: "" for k in ("interval", "window-change", "screen-change", "error", "llm")}
+    _CLR = {k: "" for k in ("interval", "window-change", "screen-change", "error", "llm", "summary", "hint")}
     _RESET = ""
 
 # Returns screenshot PIL.Image and window title
@@ -343,9 +345,11 @@ def main():
                 continue
 
             preview = text[:200].replace('\n', ' ')
-            timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+            now = datetime.datetime.now()
+            date_str = now.strftime('%Y%m%d')
+            time_str = now.strftime('%H%M%S')
             try:
-                img.save(screenshots_dir / f'screen_{timestamp}.png')
+                img.save(screenshots_dir / f'screen_{date_str}_{cycle_no:04d}_{time_str}.png')
             except Exception as exc:
                 logger.error("Failed to save screenshot: %s", exc)
             if debug:
@@ -372,7 +376,12 @@ def main():
                 model_used = model_code
 
             if debug:
-                print(f"{_CLR['llm']}↳ [LLM] model={model_used} relevance={relevance:3d} cost=${cost_usd:.5f} summary={summary[:40]}{_RESET}")
+                ts = datetime.datetime.now().strftime("%H:%M:%S")
+                print(
+                    f"{_CLR['llm']}[{ts}] ↳ [LLM] relevance={relevance:3d} cost=${cost_usd:8.5f}{_RESET} "
+                    f"{_CLR['summary']}summary={summary}{_RESET} "
+                    f"{_CLR['hint']}hint={hint}{_RESET}"
+                )
 
             logger.info("Model=%s | Relevance=%s | CostUSD=%.5f | Summary=%s | Hint=%s", model_used, relevance, cost_usd, summary, hint)
 
