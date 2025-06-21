@@ -9,3 +9,6 @@ Deploy server/main.py to Railway (or elsewhere).
 - Start screenpipe.
 - Run the server. `cd server && uvicorn src.main:app --reload`
 - Run the client. `cd client && python main.py`
+
+## Shoulder Buddy MVP (Windows 11)
+A minimal stand-alone version that monitors the active window with Windows' built in OCR. See `buddy_mvp/README.md` for setup and usage.
