@@ -1,0 +1,9 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+When you touch logging code:
+- Use `logging.handlers.RotatingFileHandler` with `maxBytes ≤ 1_000_000` and `backupCount ≤ 3`.
+- Keep console preview limited (unless `--debug`).
+- Never commit `*.log` files; they are ignored via `.gitignore`.

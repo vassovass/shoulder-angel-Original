@@ -50,3 +50,6 @@ qdrant_storage/
 
 # pickled convo history
 *.pkl
+
+# Buddy MVP generated screenshots
+buddy_mvp/screenshots/

@@ -32,4 +32,65 @@ For a lightweight local version using the built‑in Windows OCR and desktop not
    On first run you'll be asked for your tasks. The app checks the active window periodically and shows a small vibrating phone icon with a sound when the content doesn't match your tasks.
 
 This MVP relies on the Windows 11 OCR API via the `winrt` package and should work on multi‑monitor setups. Adjust `CHECK_INTERVAL` inside `windows_client.py` to change how often it checks.
-main
+
+## Development change log
+
+All code changes to this repository **must** be recorded in `CHANGELOG.md` with a short description and date.  Automation tools (including LLM assistants) should append a new bullet to that file each time they modify the codebase.
+
+## Cursor AI Setup
+
+1. Install the Cursor editor (https://cursor.com) and open this repo.
+2. Make sure **Rules** are enabled (Cmd ⇧ P → `Cursor: Enable Rules`).
+3. Cursor will auto-load the Project Rules in `.cursor/rules/`:
+   * `00-buddy-project.mdc` – core workflow
+   * `10-debug-log.mdc`    – logging conventions
+   * `20-error-history.mdc` – error diary
+4. Optional: enable **YOLO mode** in Cursor settings for automatic test runs.
+5. If the AI mis-behaves or context seems stale, run `Cursor: Clear Context & Re-Index`.
+
+### Local requirements
+* Python 3.11+
+* `pillow >= 8.2` (needed for `all_screens=True` multi-monitor capture)
+
+Install/update with:
+```bash
+pip install --upgrade pillow
+```
+
+### Additional CLI option
+
+`--threshold <int>` – perceptual-hash difference that counts as a "screen change" (default 10).  Combine with the existing `--interval`, `--keywords`, and `--debug` flags to control behaviour entirely from the command line—no config file required.
+
+The only new runtime dependencies added for recent features are:
+* `imagehash` (screen-change detection)
+* `numpy` (used by `imagehash`)
+
+### LLM model selection
+
+Use `--model` to pick which OpenAI model the buddy calls:
+
+| Code            | OpenAI name        | Price (USD / 1K tokens)* |
+|-----------------|--------------------|--------------------------|
+| o4-mini         | o4-mini            | $0.0005 in / $0.0005 out |
+| o4-mini-high    | o4-mini-high       | $0.001  in / $0.001  out |
+| gpt-4.1         | gpt-4o-2025-04-15  | $0.005  in / $0.015 out  |
+| gpt-4o          | gpt-4o-latest      | $0.005  in / $0.015 out  |
+
+`--debug` mode prints the model used and the estimated cost per call so you can monitor usage.
+
+*Prices sourced from OpenAI docs (links in CHANGELOG). They may change over time.
+
+### Environment variables (.env)
+Create a `.env` file in the repo root and put your API key (and optional default model) there:
+```
+OPENAI_API_KEY=sk-...
+BUDDY_OPENAI_MODEL=o4-mini
+```
+The script automatically loads this file via `python-dotenv` so you no longer need to `set` the variable every session.
+
+### Context instruction file
+Instead of passing a long string via `--context "…"`, place the text in a file and run with
+```
+--context-file my_instruction.txt
+```
+This keeps the command line short and lets you version-control complex ignore rules.

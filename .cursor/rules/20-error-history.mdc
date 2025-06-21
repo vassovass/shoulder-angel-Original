@@ -1,0 +1,18 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+When you add `except` blocks for **new** exceptions or handle previously unseen runtime errors:
+1. Open or create `ERROR_HISTORY.md` in the repo root.
+2. Append entry using template:
+
+```
+## YYYY-MM-DD
+- <ExceptionName>: <short description>
+  • Context: file.py:line
+  • Cause   : …
+  • Fix     : …
+```
+
+This diary helps track recurring issues and their solutions.

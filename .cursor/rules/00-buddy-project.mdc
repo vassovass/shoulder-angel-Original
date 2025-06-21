@@ -1,0 +1,33 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+## 0. Scope
+Persistent guard-rails for all AI interactions within *shoulder-angel-Original*.
+
+## 1. Must-read reference files
+- `buddy_mvp/PLANNING.md`
+- `CHANGELOG.md`
+- `README.md`
+- `.gitignore`
+
+## 2. Required workflow for every code change
+1. Confirm the change belongs to the **current sprint** in `PLANNING.md`.
+2. Update **CHANGELOG.md** (date + Added/Changed/Fixed bullet).
+3. Reflect behavioural/CLI changes in **README.md**.
+4. Run linters/tests; no new errors.
+5. Don't commit paths ignored by `.gitignore`.
+
+## 3. Logging & debug conventions
+- OCR text → `buddy_mvp/ocr.log` via rotating file handler.
+- Screenshots → `buddy_mvp/screenshots/` (git-ignored).
+- `--debug` flag enables verbose console output.
+
+## 4. Multi-monitor capture
+All capture must use `ImageGrab.grab(..., all_screens=True)` with cropping fallback.
+
+## 5. Upcoming Sprint-2 priorities
+- Config file support (keywords, interval, debug, thresholds).
+- Window switch / screen-change triggers.
+- Harden error handling.
