@@ -1,10 +1,12 @@
 ---
 description:
 globs:
-alwaysApply: false
+alwaysApply: true
 ---
-## 0. Scope
-Persistent guard-rails for all AI interactions within *shoulder-angel-Original*.
+---
+description: Persistent guard-rails for all AI interactions within shoulder-angel-Original.
+alwaysApply: true
+---
 
 ## 1. Must-read reference files
 - `buddy_mvp/PLANNING.md`
@@ -28,6 +30,5 @@ Persistent guard-rails for all AI interactions within *shoulder-angel-Original*.
 All capture must use `ImageGrab.grab(..., all_screens=True)` with cropping fallback.
 
 ## 5. Upcoming Sprint-2 priorities
-- Config file support (keywords, interval, debug, thresholds).
-- Window switch / screen-change triggers.
-- Harden error handling.
+- SEE `buddy_mvp/PLANNING.md`
+

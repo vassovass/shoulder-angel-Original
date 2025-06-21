@@ -11,9 +11,13 @@ This project adheres to the [Keep a Changelog](https://keepachangelog.com/en/1.1
 * Daily log rotation (`TimedRotatingFileHandler`) with automatic gzip compression and 7-day retention.
 * Per-cycle sequence number printed in logs; filenames follow `screen_<date>_<cycle>_<time>.png`.
 * Full LLM `summary=` and `hint=` fields printed with dedicated colours.
+* **legacy_server_insights.md** – snapshot of legacy prompts/features retained for future reference.
 ### Changed
 * Replaced size-based rotating log handler (1 MB×3) with time-based daily rotation.
 * Added runtime dependency `colorama>=0.4.6` (documented in `requirements.txt`).
+
+### Removed
+* Deprecated sub-projects `server/`, `client/` and old `docs/` folder (content migrated to `legacy_server_insights.md`).
 
 ## 2025-06-21
 ### Added
@@ -51,7 +55,7 @@ This project adheres to the [Keep a Changelog](https://keepachangelog.com/en/1.1
 - Multi-monitor capture improved: `all_screens=True` used when available; fallback crop otherwise.
 
 ### Removed
-- YAML configuration file support; all options are now provided via CLI flags (`--keywords`, `--interval`, `--debug`, `--threshold`).
+- Deprecated sub-projects `server/`, `client/` and old `docs/` folder (moved insights into root markdown).
 
 ## 2025-06-24
 ### Added
@@ -65,3 +69,7 @@ This project adheres to the [Keep a Changelog](https://keepachangelog.com/en/1.1
 ### Changed
 - Replaced size-based rotating log handler (1 MB×3) with time-based daily rotation.
 - Added runtime dependency `colorama>=0.4.6` (documented in `requirements.txt`).
+
+### Removed
+- YAML configuration file support; all options are now provided via CLI flags (`--keywords`, `--interval`, `--debug`, `--threshold`).
+- Deprecated sub-projects `server/`, `client/` and old `docs/` folder (moved insights into root markdown).

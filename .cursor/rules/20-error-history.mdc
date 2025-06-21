@@ -1,8 +1,13 @@
 ---
 description:
 globs:
-alwaysApply: false
+alwaysApply: true
 ---
+---
+description: Guidelines for recording new exceptions into ERROR_HISTORY.md for traceability.
+alwaysApply: true
+---
+
 When you add `except` blocks for **new** exceptions or handle previously unseen runtime errors:
 1. Open or create `ERROR_HISTORY.md` in the repo root.
 2. Append entry using template:

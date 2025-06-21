@@ -1,8 +1,13 @@
 ---
 description:
 globs:
-alwaysApply: false
+alwaysApply: true
 ---
+---
+description: Project logging conventions for logging code.
+alwaysApply: true
+---
+
 When you touch logging code:
 - Use `logging.handlers.RotatingFileHandler` with `maxBytes ≤ 1_000_000` and `backupCount ≤ 3`.
 - Keep console preview limited (unless `--debug`).
