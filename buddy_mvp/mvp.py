@@ -18,6 +18,7 @@ import os
 from pathlib import Path
 import datetime
 import logging.handlers
+import gzip
 
 import win32gui
 import win32con
@@ -39,8 +40,27 @@ LOG_PATH = Path(__file__).with_name('ocr.log')
 logger = logging.getLogger("shoulder-buddy")
 logger.setLevel(logging.INFO)
 if not logger.handlers:
-    _handler = logging.handlers.RotatingFileHandler(str(LOG_PATH), maxBytes=1_000_000, backupCount=3)
+    # Daily log rotation at midnight; keep 7 compressed backups.
+    _handler = logging.handlers.TimedRotatingFileHandler(
+        str(LOG_PATH), when="midnight", interval=1, backupCount=7, encoding="utf-8"
+    )
     _handler.setFormatter(logging.Formatter('%(asctime)s %(message)s'))
+
+    # Compress rotated files to .gz to save space.
+    def _namer(default_name: str):
+        return default_name + ".gz"
+
+    def _rotator(source: str, dest: str):  # pragma: no cover
+        with open(source, "rb") as sf, gzip.open(dest, "wb") as df:
+            df.writelines(sf)
+        try:
+            os.remove(source)
+        except Exception:
+            pass
+
+    _handler.namer = _namer  # type: ignore[attr-defined]
+    _handler.rotator = _rotator  # type: ignore[attr-defined]
+
     logger.addHandler(_handler)
 
 # Prevent messages propagating to the root logger (which can cause UnicodeEncodeError
