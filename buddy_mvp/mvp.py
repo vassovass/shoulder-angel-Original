@@ -19,6 +19,7 @@ from pathlib import Path
 import datetime
 import logging.handlers
 import gzip
+import json
 
 import win32gui
 import win32con
@@ -31,6 +32,7 @@ from winrt.windows.storage.streams import Buffer
 import winsound
 from buddy_mvp import llm
 from dotenv import load_dotenv
+from ctypes import Structure, c_uint, sizeof, windll, byref
 
 # Load environment variables from a .env file if present
 load_dotenv()
@@ -203,6 +205,9 @@ def main():
     parser.add_argument("--context-file", type=str, default="", help="Path to a file whose contents are sent as the custom instruction")
     parser.add_argument("--model", type=str, default="o4-mini", help="LLM model code (o4-mini, o4-mini-high, gpt-4.1, gpt-4o)")
     parser.add_argument("--config-file", type=str, default="", help="Path to a TOML config that sets defaults")
+    parser.add_argument("--log-json", action="store_true", help="Write JSONL records for each OCR cycle to buddy_mvp/ocr.jsonl")
+    parser.add_argument("--retain-days", type=int, default=7, help="Delete screenshots older than this many days (0 = keep forever)")
+    parser.add_argument("--idle-threshold", type=int, default=300, help="Seconds of user inactivity before OCR pauses")
     args = parser.parse_args()
 
     # ---------------------------------------------------------------------
@@ -246,6 +251,9 @@ def main():
     model_cfg = _get("model", args.model, str)
     if model_cfg:
         args.model = model_cfg
+    log_json = _get("log_json", args.log_json, bool)
+    retain_days = _get("retain_days", args.retain_days, int)
+    idle_threshold = _get("idle_threshold", args.idle_threshold, int)
 
     model_code = args.model
 
@@ -326,14 +334,62 @@ def main():
     except Exception as exc:
         logger.error("Could not create screenshots directory: %s", exc)
 
+    # --------------------------------------------------------------
+    # Screenshot retention cleanup
+    # --------------------------------------------------------------
+    if retain_days > 0:
+        cutoff = datetime.datetime.now() - datetime.timedelta(days=retain_days)
+        for f in screenshots_dir.glob("screen_*.png"):
+            try:
+                ts_part = f.name.split("_")[1]  # YYYYMMDD
+                file_dt = datetime.datetime.strptime(ts_part, "%Y%m%d")
+                if file_dt < cutoff:
+                    f.unlink(missing_ok=True)
+            except Exception:
+                continue
+
+    # --------------------------------------------------------------
+    # JSONL log writer
+    # --------------------------------------------------------------
+    json_log_fp = None
+    if log_json:
+        json_path = Path(__file__).with_name("ocr.jsonl")
+        try:
+            json_log_fp = json_path.open("a", encoding="utf-8")
+        except Exception as exc:
+            logger.error("Could not open JSON log file: %s", exc)
+            json_log_fp = None
+
     last_title: str | None = None
     last_hash = None
     last_ocr_ts = 0.0
     cycle_no = 0  # incremented on every OCR run for easy reference in logs
+    on_task = 0  # relevance >= 30
+    total_cycles = 0
 
     POLL = 0.5  # seconds between lightweight checks (title/hash)
 
+    # Helper for idle detection (Windows)
+    class _LASTINPUTINFO(Structure):
+        _fields_ = [("cbSize", c_uint), ("dwTime", c_uint)]
+
+    def _get_idle_seconds() -> int:  # pragma: no cover
+        try:
+            last_inp = _LASTINPUTINFO()
+            last_inp.cbSize = sizeof(last_inp)
+            if windll.user32.GetLastInputInfo(byref(last_inp)):
+                millis = win32api.GetTickCount() - last_inp.dwTime  # type: ignore[attr-defined]
+                return int(millis / 1000)
+        except Exception:
+            pass
+        return 0
+
     while True:
+        # Pause if user idle beyond threshold
+        if idle_threshold > 0 and _get_idle_seconds() >= idle_threshold:
+            time.sleep(POLL)
+            continue
+
         try:
             img, title = grab_active_window()
         except Exception as exc:
@@ -411,7 +467,35 @@ def main():
             last_hash = current_hash if 'current_hash' in locals() else None
             last_title = title
 
+            # ---- stats & json log ----
+            total_cycles += 1
+            if relevance >= 30:
+                on_task += 1
+
+            if json_log_fp is not None:
+                record = {
+                    "timestamp": now.isoformat(),
+                    "cycle": cycle_no,
+                    "reason": run_reason,
+                    "title": title,
+                    "relevance": relevance,
+                    "summary": summary,
+                    "hint": hint,
+                    "screenshot": f"screen_{date_str}_{cycle_no:04d}_{time_str}.png",
+                    "cost_usd": cost_usd,
+                }
+                try:
+                    json_log_fp.write(json.dumps(record, ensure_ascii=False) + "\n")
+                    json_log_fp.flush()
+                except Exception:
+                    pass
+
         time.sleep(POLL)
+
+        # Periodically print focus score
+        if debug and cycle_no and cycle_no % 20 == 0:
+            pct = (on_task / total_cycles * 100) if total_cycles else 0
+            print(f"{_CLR['llm']}>> Focus score last {total_cycles} cycles: {pct:5.1f}% on-task{_RESET}")
 
 
 if __name__ == "__main__":
