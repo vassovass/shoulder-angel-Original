@@ -50,4 +50,5 @@ This project adheres to the [Keep a Changelog](https://keepachangelog.com/en/1.1
 - `--threshold` + debug now prints LLM relevance summary.
 - Dependencies: `openai`, `tiktoken`, `python-dotenv` added.
 - Script now auto-loads `.env`; new `--context-file` flag for supplying custom LLM instruction text via file.
+- Automatically creates `buddy_mvp/user_data/` with `task.txt` and `ignore_rules.txt`; directory is git-ignored.
 - Model pricing table added to README (sources: [o4-mini](https://platform.openai.com/docs/models/o4-mini), [gpt-4o](https://platform.openai.com/docs/models/chatgpt-4o-latest), [gpt-4.1](https://platform.openai.com/docs/models/gpt-4.1)).

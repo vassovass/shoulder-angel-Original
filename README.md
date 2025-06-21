@@ -94,3 +94,10 @@ Instead of passing a long string via `--context "…"`, place the text in a file
 --context-file my_instruction.txt
 ```
 This keeps the command line short and lets you version-control complex ignore rules.
+
+### Where to put task & instruction files
+The script looks in `buddy_mvp/user_data/` by default:
+* `task.txt` – paste your current Jira / ClickUp task description.
+* `ignore_rules.txt` – longer custom instruction for the LLM (e.g., ignore side menus).
+
+Those files are created automatically the first time you run the script.  To use a different location pass `--task-file` / `--context-file` flags with an explicit path.

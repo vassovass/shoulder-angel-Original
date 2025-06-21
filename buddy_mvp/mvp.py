@@ -150,23 +150,37 @@ def main():
 
     POLL = 0.5  # seconds between lightweight checks (title/hash)
 
-    task_text = args.task
-    if args.task_file:
+    # ---------------- Load TASK description ----------------
+    user_data_dir = Path(__file__).with_name('user_data')
+    if not user_data_dir.exists():
         try:
-            task_text = Path(args.task_file).read_text(encoding="utf-8")
+            user_data_dir.mkdir()
+            # create placeholder files
+            (user_data_dir / 'task.txt').write_text("# Paste your current work-task description here\n", encoding="utf-8")
+            (user_data_dir / 'ignore_rules.txt').write_text("# LLM extra instructions e.g.\nIgnore navigation menus and ads\n", encoding="utf-8")
         except Exception as exc:
-            logger.error("Could not read task file %s: %s", args.task_file, exc)
+            logger.error("Could not create user_data dir: %s", exc)
+
+    task_text = args.task.strip()
+    task_file_path = Path(args.task_file) if args.task_file else user_data_dir / 'task.txt'
+    try:
+        if task_file_path.exists():
+            task_text = task_file_path.read_text(encoding="utf-8").strip() or task_text
+    except Exception as exc:
+        logger.error("Could not read task file %s: %s", task_file_path, exc)
     if not task_text:
-        task_text = "Focus on the project-related work."  # default minimal
+        task_text = "Focus on the project-related work."  # fallback minimal
 
     model_code = args.model
 
-    context_text = args.context
-    if args.context_file:
-        try:
-            context_text = Path(args.context_file).read_text(encoding="utf-8")
-        except Exception as exc:
-            logger.error("Could not read context file %s: %s", args.context_file, exc)
+    # ---------------- Load CONTEXT instruction ----------------
+    context_text = args.context.strip()
+    context_file_path = Path(args.context_file) if args.context_file else user_data_dir / 'ignore_rules.txt'
+    try:
+        if context_file_path.exists():
+            context_text = context_file_path.read_text(encoding="utf-8").strip() or context_text
+    except Exception as exc:
+        logger.error("Could not read context file %s: %s", context_file_path, exc)
 
     while True:
         try:

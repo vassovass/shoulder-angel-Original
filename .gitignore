@@ -53,3 +53,6 @@ qdrant_storage/
 
 # Buddy MVP generated screenshots
 buddy_mvp/screenshots/
+
+# User task and instruction files
+buddy_mvp/user_data/
