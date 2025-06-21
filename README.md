@@ -101,3 +101,23 @@ The script looks in `buddy_mvp/user_data/` by default:
 * `ignore_rules.txt` – longer custom instruction for the LLM (e.g., ignore side menus).
 
 Those files are created automatically the first time you run the script.  To use a different location pass `--task-file` / `--context-file` flags with an explicit path.
+
+### Logging & Debug Flags
+
+| Flag | Purpose |
+|------|---------|
+| `--debug` | Prints each OCR/LLM cycle to the console with colour-coding. |
+| `--ai-debug` | Enables raw OpenAI / HTTPX debug logs (very noisy). Use together with `--debug` if needed. |
+
+When `--debug` is active:
+* OCR trigger lines are colour-coded (green = interval, blue = window-change, yellow = screen-change).
+* The following LLM line shows **relevance**, **cost**, **summary** (magenta) and **hint** (green).
+* Each cycle is numbered (`[ #0003 ]`) and the corresponding screenshot is saved as `buddy_mvp/screenshots/screen_<date>_<cycle>_<time>.png`.
+
+#### Log files
+
+Runtime events are written to `buddy_mvp/ocr.log`.
+* Files rotate **daily at midnight**. Older logs are compressed to `.gz` and kept for 7 days.
+* To change retention or disable compression, edit the `TimedRotatingFileHandler` block near the top of `buddy_mvp/mvp.py` (look for `backupCount=7`).
+
+The console colours rely on `colorama` and automatically fall back to plain text if ANSI is not supported.

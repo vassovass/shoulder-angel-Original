@@ -4,7 +4,16 @@ All notable changes to this project will be documented in this file.
 This project adheres to the [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) principles (simplified).
 
 ## [Unreleased]
-- _Template section_: add your change above this line.
+### Added
+* Colour-coded console debug output using **colorama** (`--debug`).
+* New flag `--ai-debug` to show raw OpenAI/HTTPX debug traffic; default remains quiet.
+* Screenshot files now include cycle number for easy cross-reference.
+* Daily log rotation (`TimedRotatingFileHandler`) with automatic gzip compression and 7-day retention.
+* Per-cycle sequence number printed in logs; filenames follow `screen_<date>_<cycle>_<time>.png`.
+* Full LLM `summary=` and `hint=` fields printed with dedicated colours.
+### Changed
+* Replaced size-based rotating log handler (1 MB×3) with time-based daily rotation.
+* Added runtime dependency `colorama>=0.4.6` (documented in `requirements.txt`).
 
 ## 2025-06-21
 ### Added
@@ -52,3 +61,7 @@ This project adheres to the [Keep a Changelog](https://keepachangelog.com/en/1.1
 - Script now auto-loads `.env`; new `--context-file` flag for supplying custom LLM instruction text via file.
 - Automatically creates `buddy_mvp/user_data/` with `task.txt` and `ignore_rules.txt`; directory is git-ignored.
 - Model pricing table added to README (sources: [o4-mini](https://platform.openai.com/docs/models/o4-mini), [gpt-4o](https://platform.openai.com/docs/models/chatgpt-4o-latest), [gpt-4.1](https://platform.openai.com/docs/models/gpt-4.1)).
+
+### Changed
+- Replaced size-based rotating log handler (1 MB×3) with time-based daily rotation.
+- Added runtime dependency `colorama>=0.4.6` (documented in `requirements.txt`).
