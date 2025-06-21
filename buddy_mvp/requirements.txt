@@ -1,0 +1,4 @@
+winrt
+pywin32
+Pillow
+win10toast

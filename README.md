@@ -10,6 +10,10 @@ Deploy server/main.py to Railway (or elsewhere).
 - Run the server. `cd server && uvicorn src.main:app --reload`
 - Run the client. `cd client && python main.py`
 
+rzwnvk-codex/create-mvp-with-ai-based-task-relevance-notifications
+## Shoulder Buddy MVP (Windows 11)
+A minimal stand-alone version that monitors the active window with Windows' built in OCR. See `buddy_mvp/README.md` for setup and usage.
+=======
 ## Windows 11 MVP
 
 For a lightweight local version using the built‑in Windows OCR and desktop notifications:
@@ -28,3 +32,4 @@ For a lightweight local version using the built‑in Windows OCR and desktop not
    On first run you'll be asked for your tasks. The app checks the active window periodically and shows a small vibrating phone icon with a sound when the content doesn't match your tasks.
 
 This MVP relies on the Windows 11 OCR API via the `winrt` package and should work on multi‑monitor setups. Adjust `CHECK_INTERVAL` inside `windows_client.py` to change how often it checks.
+main
