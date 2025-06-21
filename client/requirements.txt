@@ -1,0 +1,5 @@
+# Requirements for Windows client MVP
+pygetwindow
+Pillow
+winrt
+openai
